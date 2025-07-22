@@ -22,11 +22,3 @@ file(GLOB_RECURSE ALL_SOURCES
 )
 target_sources(${ProjectTitle} PRIVATE ${ALL_SOURCES})
 target_include_directories(${ProjectTitle} PRIVATE src/)
-
-# Copy assets
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/assets"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
-        COMMENT "Copying assets folder to output directory"
-)
