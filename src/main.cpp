@@ -25,13 +25,6 @@ bool is_video_format(const std::string& filepath) {
     return false;
 }
 
-void clear_console_lines(const int num_lines) {
-    for (int i = 0; i < num_lines; ++i) {
-        std::cout << "\x1b[1A"; // Move cursor up one line
-        std::cout << "\x1b[2K"; // Clear entire line
-    }
-}
-
 void process_image(const cv::Mat &img, int console_width) {
 
     cv::Mat modified_img;
@@ -65,7 +58,7 @@ void process_video(cv::VideoCapture &vid, int console_width) {
         vid >> img; // Read the next frame into the 'frame' Mat
 
         if (img.empty()) { // Check if the frame is empty (end of video or error)
-            std::cout << "End of video or frame read error." << std::endl;
+            // std::cout << "End of video or frame read error." << std::endl;
             break;
         }
 
@@ -90,13 +83,23 @@ void process_video(cv::VideoCapture &vid, int console_width) {
         output_frames.push_back(frame);
     }
 
-    for (const auto& frame : output_frames) {
-        int clear_line_cnt = frame.data.size() / frame.line_offset;
-        // std::cout << clear_line_cnt << "\n";
-        clear_console_lines(clear_line_cnt);
-        ascii::console_draw_frame(frame);
-        std::this_thread::sleep_for(std::chrono::milliseconds(16));
-    }
+    vid.release();
+
+    // auto test_frame = output_frames[0];
+    // ascii::console_draw_frame(test_frame);
+    // int clear_line_cnt = test_frame.data.length() / test_frame.line_offset;
+    // std::cout << clear_line_cnt << " clear lines \n";
+    // // std::cout << clear_line_cnt << "test test test \n";
+    // // std::cout << clear_line_cnt << "test test test \n";
+    // clear_console_lines(clear_line_cnt);
+
+    // auto prevFrame = output_frames[0];
+    // for (const auto& frame : output_frames) {
+    //     double_buffered_draw_frame(frame, prevFrame);
+    //     prevFrame = frame;
+    //     std::this_thread::sleep_for(std::chrono::milliseconds(16));
+    // }
+    ascii::console_draw_multiple_frames_double_buffered(output_frames, 24.0);
 }
 
 int main(int argc, char** argv) {

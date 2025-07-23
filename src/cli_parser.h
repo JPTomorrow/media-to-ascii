@@ -28,6 +28,10 @@ namespace cli_parser {
 
     inline Parser::Parser(int argc, char **argv) : m_argc(argc), m_argv(argv) {}
 
+    inline void Parser::register_positional_arg(const std::string &value_name) {
+
+    }
+
     inline void Parser::register_flag_arg(const std::string& value_name) {
         for (int i = 0; i < m_argc; i++) {
             std::string arg = m_argv[i];

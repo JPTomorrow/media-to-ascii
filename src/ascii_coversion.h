@@ -1,8 +1,10 @@
 #ifndef ASCII_COVERSION_H
 #define ASCII_COVERSION_H
 
+#include <chrono>
 #include <vector>
 #include <map>
+#include <thread>
 
 namespace ascii {
     typedef struct {
@@ -40,6 +42,22 @@ namespace ascii {
         return ' ';
     };
 
+    inline std::string frame_to_string(const AsciiFrame& frame) {
+        std::string result;
+        result.reserve(frame.data.size() + (frame.data.size() / frame.line_offset) + 1);
+
+        size_t offset = 0;
+        for (char c : frame.data) {
+            result.push_back(c);
+            offset++;
+            if (offset >= frame.line_offset) {
+                result.push_back('\n');
+                offset = 0;
+            }
+        }
+        return result;
+    }
+
     inline void console_draw_frame(const AsciiFrame& frame) {
         std::ios_base::sync_with_stdio(false);
 
@@ -56,6 +74,53 @@ namespace ascii {
 
         std::cout << final << "\n";
         std::ios_base::sync_with_stdio(true);
+    }
+
+    inline void console_draw_multiple_frames_double_buffered(const std::vector<AsciiFrame>& frames, double framerate) {
+        if (frames.empty() || framerate <= 0) {
+            return;
+        }
+
+        // std::ios_base::sync_with_stdio(false);
+
+        auto frame_duration = std::chrono::duration<double>(1.0 / framerate);
+
+        // Pre-convert frames
+        std::vector<std::string> frame_strings;
+        for (const auto& frame : frames) {
+            frame_strings.push_back(frame_to_string(frame));
+        }
+
+        // Hide cursor and save initial position
+        std::cout << "\033[?25l";  // Hide cursor
+        std::cout << "\033[s";     // Save cursor position
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::cout << std::flush;
+
+        for (size_t i = 0; i < frames.size(); ++i) {
+            auto start_time = std::chrono::high_resolution_clock::now();
+
+            // Always return to saved position (beginning of animation area)
+            std::cout << "\033[u";  // Restore cursor position
+            std::cout << "\033[J";  // Clear from cursor to end of screen
+
+            // Draw frame
+            std::cout << frame_strings[i] << std::flush;
+
+            // Frame timing
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto elapsed = end_time - start_time;
+
+            if (elapsed < frame_duration) {
+                std::this_thread::sleep_for(frame_duration - elapsed);
+            }
+        }
+
+        // Show cursor
+        std::cout << "\033[?25h" << std::flush;
+        std::cout << std::endl;
+
+        // std::ios_base::sync_with_stdio(true);
     }
 }
 
