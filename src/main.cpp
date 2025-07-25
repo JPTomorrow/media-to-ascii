@@ -3,13 +3,7 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/utils/logger.hpp>
 #include <Windows.h>
-
 #include "cli_parser.h"
-
-std::string get_asset_full_path(const std::string& filename) {
-    std::string path = "./assets/";
-    return path + filename;
-}
 
 bool is_image_format(const std::string& filepath) {
     std::array<std::string, 5> formats = { ".png", ".jpg", ".bmp", ".webp", ".jpeg" };
@@ -106,17 +100,12 @@ void process_video(cv::VideoCapture &vid, int console_width) {
 
 int main(int argc, char** argv) {
 
-    const char* test_strs[] = {"path/to/program.exe", "1", "./shit/fuck", "-w", "-1024"};
-    char ** test_args = const_cast<char**>(test_strs);
+    // test for arg parser
+    // const char* test_strs[] = {"path/to/program.exe", "1", "./shit/fuck", "-w", "-1024"};
+    // char ** test_args = const_cast<char**>(test_strs);
 
-    auto arg_parse = cli_parser::Parser(5, test_args);
-    auto arg = arg_parse.get_positional_arg("input file path", 1, true)
-    .or_else([](const std::string& error) {
-        std::cerr << error << std::endl;
-        return std::expected<cli_parser::ArgInfo, std::string>{};
-    });
-
-    auto arg2 = arg_parse.get_flag_arg("-w", true, "width must be provided")
+    auto arg_parse = cli_parser::Parser(argc, argv);
+    auto fp_arg = arg_parse.get_positional_arg("input file path", 1, true)
     .or_else([](const std::string& error) {
         std::cerr << error << std::endl;
         return std::expected<cli_parser::ArgInfo, std::string>{};
@@ -127,8 +116,7 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    // const std::string filepath = get_asset_full_path("test_01.webp");
-    const std::string filepath = get_asset_full_path("test_vid.mp4");
+    const std::string filepath = std::get<std::string>(fp_arg.value().value);
 
     // setup silent logging and console font
     cv::utils::logging::setLogLevel(cv::utils::logging::LogLevel::LOG_LEVEL_SILENT);
