@@ -4,6 +4,8 @@
 #include <opencv2/core/utils/logger.hpp>
 #include <Windows.h>
 
+#include "cli_parser.h"
+
 std::string get_asset_full_path(const std::string& filename) {
     std::string path = "./assets/";
     return path + filename;
@@ -103,6 +105,28 @@ void process_video(cv::VideoCapture &vid, int console_width) {
 }
 
 int main(int argc, char** argv) {
+
+    const char* test_strs[] = {"path/to/program.exe", "1", "./shit/fuck", "-w", "-1024"};
+    char ** test_args = const_cast<char**>(test_strs);
+
+    auto arg_parse = cli_parser::Parser(5, test_args);
+    auto arg = arg_parse.get_positional_arg("input file path", 1, true)
+    .or_else([](const std::string& error) {
+        std::cerr << error << std::endl;
+        return std::expected<cli_parser::ArgInfo, std::string>{};
+    });
+
+    auto arg2 = arg_parse.get_flag_arg("-w", true, "width must be provided")
+    .or_else([](const std::string& error) {
+        std::cerr << error << std::endl;
+        return std::expected<cli_parser::ArgInfo, std::string>{};
+    });
+
+    if (arg_parse.has_failed_args()) {
+        system("pause");
+        return -1;
+    }
+
     // const std::string filepath = get_asset_full_path("test_01.webp");
     const std::string filepath = get_asset_full_path("test_vid.mp4");
 
